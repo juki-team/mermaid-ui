@@ -385,13 +385,17 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
 
   const timeoutRef = useRef<NodeJS.Timeout>(null);
   useEffect(() => {
+    const body = JSON.parse(newBodyString);
+    if (isLoading || body.files?.length === 0) {
+      return;
+    }
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     timeoutRef.current = setTimeout(async () => {
       const { url, ...options } = jukiApiManager.API_V2.mermaid.updateData({
         params: { key: fallbackData.key },
-        body: JSON.parse(newBodyString),
+        body,
       });
       cleanRequest<ContentResponseType<{ key: string }>>(await authorizedRequest(url, options));
       await reloadMermaid();
@@ -402,7 +406,7 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [fallbackData.key, newBodyString, reloadMermaid]);
+  }, [fallbackData.key, isLoading, newBodyString, reloadMermaid]);
 
   const { Link } = useUIStore((store) => store.components);
   const user = useUserStore((store) => store.user);
