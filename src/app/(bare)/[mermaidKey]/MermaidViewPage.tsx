@@ -413,7 +413,7 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
   const [mermaidTheme, setMermaidTheme] = useState<MermaidTheme>('default');
   const [configJson, setConfigJson] = useState(DEFAULT_CONFIG);
   const [renderedSvg, setRenderedSvg] = useState('');
-  const [error, setError] = useState<string>(null);
+  const [error, setError] = useState<string>('');
   const [isRendering, setIsRendering] = useState(false);
   const [currentFileName, setCurrentFileName] = useState('');
 
