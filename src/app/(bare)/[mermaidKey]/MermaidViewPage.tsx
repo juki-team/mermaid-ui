@@ -1,10 +1,11 @@
 'use client';
 
-import { CodeEditorFiles } from '@juki-team/commons';
 import {
+  ArrowBackIcon,
   Button,
-  ContentCopyIcon,
   CopyToClipboard,
+  DateLiteral,
+  DocumentMembersButton,
   DownloadIcon,
   ExpandMoreIcon,
   FullscreenExitIcon,
@@ -19,22 +20,29 @@ import {
   RefreshIcon,
   Select,
   SettingsIcon,
-  ShareIcon,
+  SpinIcon,
   SplitPane,
   T,
   UserCodeEditor,
   WarningIcon,
 } from 'components';
-import { MutableRefObject, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { jukiApiManager } from 'config';
+import { JUKI_SERVICE_V2_URL } from 'config/constants';
+import { authorizedRequest, classNames, cleanRequest, contentResponse, getUserKey } from 'helpers';
+import { useFetcher, useStableRef, useUIStore, useUserStore } from 'hooks';
+import { MouseEvent, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import type { UserCodeEditorProps } from 'types';
+import {
+  CodeEditorFiles,
+  CodeLanguage,
+  ContentResponseType,
+  EntityMembersResponseDTO,
+  MermaidResponseDTO
+} from 'types';
 import { DEFAULT_MERMAID_CODE, MERMAID_TEMPLATES } from './mermaid-templates';
+import { MermaidAiChat } from './MermaidAiChat';
 
 type MermaidTheme = 'default' | 'dark' | 'forest' | 'neutral' | 'base';
-
-interface StoredState {
-  code: string;
-  theme: MermaidTheme;
-  config: string;
-}
 
 const MERMAID_THEMES: { value: MermaidTheme; label: string }[] = [
   { value: 'default', label: 'Default' },
@@ -52,38 +60,6 @@ const DEFAULT_CONFIG = `{
   "startOnLoad": false
 }`;
 
-const storageKey = (key: string) => `mermaid-editor-${key}`;
-
-function loadFromStorage(key: string): StoredState | null {
-  try {
-    const raw = localStorage.getItem(storageKey(key));
-    if (raw) return JSON.parse(raw) as StoredState;
-  } catch {}
-  return null;
-}
-
-function saveToStorage(key: string, data: StoredState) {
-  try {
-    localStorage.setItem(storageKey(key), JSON.stringify(data));
-  } catch {}
-}
-
-function encodeToHash(code: string): string {
-  try {
-    return btoa(encodeURIComponent(code));
-  } catch {
-    return '';
-  }
-}
-
-function decodeFromHash(hash: string): string | null {
-  try {
-    return decodeURIComponent(atob(hash));
-  } catch {
-    return null;
-  }
-}
-
 function downloadBlob(content: string, filename: string, mimeType: string) {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
@@ -93,38 +69,6 @@ function downloadBlob(content: string, filename: string, mimeType: string) {
   a.click();
   URL.revokeObjectURL(url);
 }
-
-function buildEditorFiles(source: string, filename: string): CodeEditorFiles<string> {
-  return {
-    [filename]: { source, language: 'plaintext', index: 0, name: filename, hidden: false, readonly: false, protected: false },
-  };
-}
-
-// Detects active file switches inside UserCodeEditor and notifies the parent
-function FileWatcher({
-  currentFileName,
-  files,
-  currentFileNameRef,
-  onSwitch,
-}: {
-  currentFileName: string;
-  files: CodeEditorFiles<string>;
-  currentFileNameRef: MutableRefObject<string>;
-  onSwitch: (source: string) => void;
-}) {
-  const filesRef = useRef(files);
-  filesRef.current = files;
-
-  useEffect(() => {
-    currentFileNameRef.current = currentFileName;
-    onSwitch(filesRef.current[currentFileName]?.source ?? '');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentFileName]);
-
-  return null;
-}
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function ErrorPanel({ error }: { error: string }) {
   return (
@@ -166,18 +110,7 @@ function ZoomToolbar({
   onToggleFullscreen: () => void;
 }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px',
-        padding: '4px 8px',
-        borderBottom: '1px solid var(--t-color-gray-4)',
-        flexShrink: 0,
-        background: 'var(--t-color-bg)',
-        flexWrap: 'wrap',
-      }}
-    >
+    <div className="jk-row gap jk-pg-xsm">
       <Button onClick={() => onZoom(-0.1)} icon={<MinusIcon size="small" />} size="tiny" type="light" />
       <span style={{ minWidth: '42px', textAlign: 'center', fontSize: '0.8rem', userSelect: 'none' }}>
         {Math.round(zoom * 100)}%
@@ -220,7 +153,7 @@ function TemplatesModal({ isOpen, onClose, onLoad }: { isOpen: boolean; onClose:
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} closeIcon closeOnKeyEscape closeOnClickOverlay className="jk-pg">
-      <div style={{ width: 'min(640px, 90vw)', maxHeight: '80vh', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="jk-col stretch gap nowrap wh-100">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h3 style={{ margin: 0 }}>
             <T className="tt-se">diagram templates</T>
@@ -243,7 +176,7 @@ function TemplatesModal({ isOpen, onClose, onLoad }: { isOpen: boolean; onClose:
           }}
         />
 
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        <div className="jk-row gap">
           {TEMPLATE_CATEGORIES.map((cat) => (
             <Button
               key={cat}
@@ -259,19 +192,15 @@ function TemplatesModal({ isOpen, onClose, onLoad }: { isOpen: boolean; onClose:
         <div style={{ overflow: 'auto', flex: 1 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '8px' }}>
             {filtered.map((template) => (
-              <button
+              <Button
                 key={template.name}
                 onClick={() => {
                   onLoad(template.code);
                   onClose();
                 }}
+                type="text"
+                className="jk-br-ie"
                 style={{
-                  padding: '12px',
-                  border: '1px solid var(--t-color-gray-4)',
-                  borderRadius: '6px',
-                  background: 'var(--t-color-bg)',
-                  color: 'var(--t-color-text)',
-                  cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: '0.85rem',
                   fontWeight: 500,
@@ -280,18 +209,10 @@ function TemplatesModal({ isOpen, onClose, onLoad }: { isOpen: boolean; onClose:
                   flexDirection: 'column',
                   gap: '4px',
                 }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--t-color-primary)';
-                  (e.currentTarget as HTMLButtonElement).style.background = 'var(--t-color-primary-light, #eff6ff)';
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--t-color-gray-4)';
-                  (e.currentTarget as HTMLButtonElement).style.background = 'var(--t-color-bg)';
-                }}
               >
                 <span>{template.name}</span>
                 <span style={{ fontSize: '0.7rem', color: 'var(--t-color-gray-6)', fontWeight: 400 }}>{template.category}</span>
-              </button>
+              </Button>
             ))}
           </div>
           {filtered.length === 0 && (
@@ -339,20 +260,20 @@ function ConfigModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} closeIcon closeOnKeyEscape closeOnClickOverlay className="jk-pg">
-      <div style={{ width: 'min(560px, 90vw)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <h3 style={{ margin: 0 }}>
+      <div className="jk-col gap wh-100 stretch">
+        <h3>
           <T className="tt-se">mermaid configuration</T>
         </h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--t-color-gray-6)' }}>
-          <InfoIIcon size="small" />
+        <div className="jk-row tx-s left gap">
+          <InfoIIcon size="small" filledCircle className="cr-at-lt" />
           <span>
             JSON config passed to{' '}
-            <code style={{ background: 'var(--t-color-gray-2)', padding: '1px 4px', borderRadius: '3px' }}>
+            <code className="bc-hl" style={{ padding: '1px 4px', borderRadius: '3px' }}>
               mermaid.initialize()
             </code>
           </span>
         </div>
-        <div style={{ height: '320px', border: '1px solid var(--t-color-gray-4)', borderRadius: '4px', overflow: 'hidden' }}>
+        <div className="ow-hn jk-br-ie" style={{ height: '320px', overflow: 'hidden' }}>
           <Suspense
             fallback={
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
@@ -360,11 +281,21 @@ function ConfigModal({
               </div>
             }
           >
-            <UserCodeEditor<string>
+            <UserCodeEditor<CodeLanguage.JSON>
               key={configEditorKey}
               storeKey={`mermaid-config-editor-${configEditorKey}`}
-              languages={[{ value: 'json', label: 'JSON' }]}
-              initialFiles={{ 'config.json': { source: localConfig, language: 'json', index: 0, name: 'config.json', hidden: false, readonly: false, protected: false } }}
+              languages={[{ value: CodeLanguage.JSON, label: 'JSON' }]}
+              initialFiles={{
+                'config.json': {
+                  source: localConfig,
+                  language: CodeLanguage.JSON,
+                  index: 0,
+                  name: 'config.json',
+                  hidden: false,
+                  readonly: false,
+                  protected: false,
+                },
+              }}
               onFilesChange={(files) => {
                 const source = files['config.json']?.source;
                 if (source !== undefined) setLocalConfig(source);
@@ -394,125 +325,110 @@ function ConfigModal({
   );
 }
 
-function ShareModal({ isOpen, onClose, shareUrl }: { isOpen: boolean; onClose: () => void; shareUrl: string }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {}
+const toEntityMembersDTO = (members: EntityMembersResponseDTO) => {
+  return {
+    rankAdministrators: members.rankAdministrators,
+    administrators: Object.keys(members.administrators),
+    rankManagers: members.rankManagers,
+    managers: Object.keys(members.managers),
+    rankParticipants: members.rankParticipants,
+    participants: Object.keys(members.participants),
+    rankGuests: members.rankGuests,
+    guests: Object.keys(members.guests),
+    rankSpectators: members.rankSpectators,
+    spectators: Object.keys(members.spectators),
   };
+};
 
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} closeIcon closeOnKeyEscape closeOnClickOverlay className="jk-pg">
-      <div style={{ width: 'min(540px, 90vw)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <h3 style={{ margin: 0 }}>
-          <T className="tt-se">share diagram</T>
-        </h3>
-        <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--t-color-gray-6)' }}>
-          <T className="tt-se">this link encodes your diagram in the URL — no account needed</T>
-        </p>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <input
-            readOnly
-            value={shareUrl}
-            style={{
-              flex: 1,
-              padding: '6px 10px',
-              border: '1px solid var(--t-color-gray-4)',
-              borderRadius: '4px',
-              fontSize: '0.8rem',
-              fontFamily: 'monospace',
-              background: 'var(--t-color-gray-1, #f5f5f5)',
-              color: 'var(--t-color-text)',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-            onClick={(e) => (e.target as HTMLInputElement).select()}
-          />
-          <Button
-            onClick={handleCopy}
-            icon={copied ? undefined : <ContentCopyIcon size="small" />}
-            type={copied ? 'accent' : 'light'}
-          >
-            {copied ? '✓ Copied!' : <T className="tt-se">copy</T>}
-          </Button>
-        </div>
-      </div>
-    </Modal>
+const oderFiles = (files: CodeEditorFiles<CodeLanguage.MERMAID>) => {
+  const filesArray: CodeEditorFiles<CodeLanguage.MERMAID> = {};
+  for (const [key, file] of Object.entries(files)) {
+    filesArray[key] = {
+      source: file.source,
+      language: file.language,
+      index: file.index,
+      name: file.name,
+      hidden: file.hidden,
+      readonly: file.readonly,
+      protected: file.protected,
+    };
+  }
+
+  return filesArray;
+};
+
+export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidResponseDTO }) {
+  const {
+    data,
+    isLoading,
+    isValidating,
+    mutate: reloadMermaid,
+  } = useFetcher<ContentResponseType<MermaidResponseDTO>>(
+    jukiApiManager.API_V2.mermaid.getData({ params: { key: fallbackData.key } }).url,
+    { fallbackData: JSON.stringify(contentResponse('fallback data', fallbackData)) },
   );
-}
+  const mermaid = data?.success ? data.content : fallbackData;
+  const [files, setFiles] = useState(mermaid.files);
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+  const newBodyString = JSON.stringify({
+    name: mermaid.name,
+    files: oderFiles(files),
+    tags: [],
+    members: toEntityMembersDTO(mermaid.members),
+  });
+  const currentBodyString = JSON.stringify({
+    name: mermaid.name,
+    files: oderFiles(mermaid.files),
+    tags: [],
+    members: toEntityMembersDTO(mermaid.members),
+  });
 
-export function MermaidViewPage({ mermaidKey }: { mermaidKey: string }) {
-  const [code, setCode] = useState(DEFAULT_MERMAID_CODE);
+  const timeoutRef = useRef<NodeJS.Timeout>(null);
+  useEffect(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(async () => {
+      const { url, ...options } = jukiApiManager.API_V2.mermaid.updateData({
+        params: { key: fallbackData.key },
+        body: JSON.parse(newBodyString),
+      });
+      cleanRequest<ContentResponseType<{ key: string }>>(await authorizedRequest(url, options));
+      await reloadMermaid();
+      timeoutRef.current = null;
+    }, 400);
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [fallbackData.key, newBodyString, reloadMermaid]);
+
+  const { Link } = useUIStore((store) => store.components);
+  const user = useUserStore((store) => store.user);
   const [mermaidTheme, setMermaidTheme] = useState<MermaidTheme>('default');
   const [configJson, setConfigJson] = useState(DEFAULT_CONFIG);
   const [renderedSvg, setRenderedSvg] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isRendering, setIsRendering] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-  const [editorKey, setEditorKey] = useState(0);
+  const [currentFileName, setCurrentFileName] = useState('');
 
-  // View controls
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Modals
   const [showTemplates, setShowTemplates] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
-  const [showShare, setShowShare] = useState(false);
-  const [shareUrl, setShareUrl] = useState('');
-  const [copiedCode, setCopiedCode] = useState(false);
-  const [copiedSvg, setCopiedSvg] = useState(false);
 
-  // Refs
   const renderIdRef = useRef(0);
   const dragStartRef = useRef({ x: 0, y: 0 });
   const previewContainerRef = useRef<HTMLDivElement>(null);
-  const currentFileNameRef = useRef('diagram.mmd');
+  const wheelContainerRef = useRef<HTMLDivElement>(null);
 
-  // ── Initialization ──────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    setIsMounted(true);
-
-    // URL hash takes priority (shared diagram)
-    const hash = window.location.hash.slice(1);
-    if (hash && hash.length > 10) {
-      const decoded = decodeFromHash(hash);
-      if (decoded) {
-        setCode(decoded);
-        return;
-      }
-    }
-
-    // Then load from localStorage
-    const stored = loadFromStorage(mermaidKey);
-    if (stored) {
-      if (stored.code) setCode(stored.code);
-      if (stored.theme) setMermaidTheme(stored.theme);
-      if (stored.config) setConfigJson(stored.config);
-    }
-  }, [mermaidKey]);
-
-  // ── Persist to localStorage ─────────────────────────────────────────────────
+  const code = files[currentFileName]?.source || DEFAULT_MERMAID_CODE;
 
   useEffect(() => {
-    if (!isMounted) return;
-    saveToStorage(mermaidKey, { code, theme: mermaidTheme, config: configJson });
-  }, [code, mermaidTheme, configJson, mermaidKey, isMounted]);
-
-  // ── Mermaid Rendering ───────────────────────────────────────────────────────
-
-  useEffect(() => {
-    if (!isMounted) return;
-
     const renderId = ++renderIdRef.current;
     setIsRendering(true);
 
@@ -552,17 +468,13 @@ export function MermaidViewPage({ mermaidKey }: { mermaidKey: string }) {
     return () => {
       clearTimeout(timeout);
     };
-  }, [code, mermaidTheme, configJson, isMounted]);
-
-  // ── Fullscreen listener ─────────────────────────────────────────────────────
+  }, [code, mermaidTheme, configJson]);
 
   useEffect(() => {
     const handleChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', handleChange);
     return () => document.removeEventListener('fullscreenchange', handleChange);
   }, []);
-
-  // ── Zoom & Pan ──────────────────────────────────────────────────────────────
 
   const handleZoom = useCallback((delta: number) => {
     setZoom((z) => Math.max(0.1, Math.min(8, parseFloat((z + delta).toFixed(2)))));
@@ -574,7 +486,7 @@ export function MermaidViewPage({ mermaidKey }: { mermaidKey: string }) {
   }, []);
 
   const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent) => {
       if (e.button !== 0) return;
       setIsDragging(true);
       dragStartRef.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
@@ -592,13 +504,17 @@ export function MermaidViewPage({ mermaidKey }: { mermaidKey: string }) {
 
   const handleMouseUp = useCallback(() => setIsDragging(false), []);
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = -e.deltaY * 0.001;
-    setZoom((z) => Math.max(0.1, Math.min(8, parseFloat((z + delta).toFixed(3)))));
+  useEffect(() => {
+    const el = wheelContainerRef.current;
+    if (!el) return;
+    const onWheel = (e: globalThis.WheelEvent) => {
+      e.preventDefault();
+      const delta = -e.deltaY * 0.001;
+      setZoom((z) => Math.max(0.1, Math.min(8, parseFloat((z + delta).toFixed(3)))));
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
   }, []);
-
-  // ── Fullscreen ──────────────────────────────────────────────────────────────
 
   const handleToggleFullscreen = useCallback(async () => {
     if (!previewContainerRef.current) return;
@@ -609,12 +525,10 @@ export function MermaidViewPage({ mermaidKey }: { mermaidKey: string }) {
     }
   }, []);
 
-  // ── Export ──────────────────────────────────────────────────────────────────
-
   const handleExportSVG = useCallback(() => {
     if (!renderedSvg) return;
-    downloadBlob(renderedSvg, `diagram-${mermaidKey}.svg`, 'image/svg+xml;charset=utf-8');
-  }, [renderedSvg, mermaidKey]);
+    downloadBlob(renderedSvg, `diagram-${mermaid.key}.svg`, 'image/svg+xml;charset=utf-8');
+  }, [renderedSvg, mermaid.key]);
 
   const handleExportPNG = useCallback(() => {
     if (!renderedSvg) return;
@@ -634,86 +548,50 @@ export function MermaidViewPage({ mermaidKey }: { mermaidKey: string }) {
       ctx.fillRect(0, 0, w, h);
       ctx.drawImage(img, 0, 0);
       const a = document.createElement('a');
-      a.download = `diagram-${mermaidKey}.png`;
+      a.download = `diagram-${mermaid.key}.png`;
       a.href = canvas.toDataURL('image/png');
       a.click();
       URL.revokeObjectURL(url);
     };
     img.onerror = () => URL.revokeObjectURL(url);
     img.src = url;
-  }, [renderedSvg, mermaidTheme, mermaidKey]);
+  }, [renderedSvg, mermaidTheme, mermaid.key]);
 
-  // ── Copy ────────────────────────────────────────────────────────────────────
+  const setFileCbRef = useRef<Parameters<NonNullable<UserCodeEditorProps<CodeLanguage.MERMAID>['setSetFile']>>[0]>(null);
+  const filesRef = useStableRef(files);
+  const setCode = useCallback(
+    (source: string) => {
+      if (filesRef.current[currentFileName]?.source !== source) {
+        setFileCbRef.current?.(currentFileName, {
+          ...filesRef.current[currentFileName],
+          source,
+        });
+      }
+    },
+    [currentFileName, filesRef],
+  );
+  const setCodeRef = useStableRef(setCode);
 
-  const handleCopyCode = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopiedCode(true);
-      setTimeout(() => setCopiedCode(false), 2000);
-    } catch {}
-  }, [code]);
-
-  const handleCopySVG = useCallback(async () => {
-    if (!renderedSvg) return;
-    try {
-      await navigator.clipboard.writeText(renderedSvg);
-      setCopiedSvg(true);
-      setTimeout(() => setCopiedSvg(false), 2000);
-    } catch {}
-  }, [renderedSvg]);
-
-  // ── Share ───────────────────────────────────────────────────────────────────
-
-  const handleShare = useCallback(() => {
-    const hash = encodeToHash(code);
-    const url = `${window.location.origin}${window.location.pathname}#${hash}`;
-    setShareUrl(url);
-    setShowShare(true);
-    // Also update the URL hash without reloading
-    window.history.replaceState(null, '', `#${hash}`);
-  }, [code]);
-
-  // ── Template loading ────────────────────────────────────────────────────────
-
-  const handleLoadTemplate = useCallback((templateCode: string) => {
-    setCode(templateCode);
-    setEditorKey((k) => k + 1);
-    // Clear URL hash when loading a template
-    window.history.replaceState(null, '', window.location.pathname);
-  }, []);
-
-  // ── Editor callbacks ────────────────────────────────────────────────────────
-
-  const handleFilesChange = useCallback((files: CodeEditorFiles<string>) => {
-    const source = files[currentFileNameRef.current]?.source;
-    if (source !== undefined) setCode(source);
-  }, []);
-
-  const handleFileSwitched = useCallback((source: string) => {
-    setCode(source);
-  }, []);
-
-  // ── Render ──────────────────────────────────────────────────────────────────
-
-  if (!isMounted) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-        <LoadingIcon size="huge" />
-      </div>
-    );
-  }
+  const setSetFile = useCallback(
+    (setFileCb: Parameters<NonNullable<UserCodeEditorProps<CodeLanguage.MERMAID>['setSetFile']>>[0]) => {
+      setFileCbRef.current = setFileCb;
+    },
+    [],
+  );
 
   const selectedThemeOption = {
     value: mermaidTheme,
     label: MERMAID_THEMES.find((t) => t.value === mermaidTheme)?.label || mermaidTheme,
   };
+  console.log({ files, currentFileName, code });
 
   return (
     <div className="jk-col ow-hn" style={{ height: '100vh' }}>
       <div className="jk-row gap jk-pg-xsm wh-100">
-        <div className="jk-row">
-          <span className="fw-bd cr-tx-ht">Mermaid Editor</span>
-        </div>
+        <Link href="/">
+          <Button type="text" icon={<ArrowBackIcon />} tooltipContent="back home" />
+        </Link>
+        <div className="jk-row cr-at tx-l fw-br">Mermaid Editor</div>
 
         <div className="jk-row gap">
           <PaletteIcon size="small" />
@@ -733,33 +611,36 @@ export function MermaidViewPage({ mermaidKey }: { mermaidKey: string }) {
         </Button>
 
         <div className="flex-1" />
-
-        <Button
-          onClick={handleCopyCode}
-          icon={<ContentCopyIcon size="small" />}
+        <div className="tx-t jk-row gap" style={{ opacity: 0.6 }}>
+          {isLoading || isValidating ? (
+            <SpinIcon />
+          ) : (
+            <InfoIIcon
+              filledCircle
+              size="tiny"
+              className={classNames({
+                'cr-wg': currentBodyString !== newBodyString,
+                'cr-ss': currentBodyString === newBodyString,
+              })}
+              data-tooltip-id="jk-tooltip"
+              data-tooltip-content={currentBodyString !== newBodyString ? 'changes not saved' : 'changes saved'}
+            />
+          )}
+          <DateLiteral date={new Date(mermaid.updatedAt)} />
+        </div>
+        <DocumentMembersButton
+          members={mermaid.members}
+          managers={{}}
+          spectators={{}}
+          documentOwner={mermaid.owner}
+          saveUrl={`${JUKI_SERVICE_V2_URL}/mermaid/${mermaid.key}/members`}
+          isAdministrator={
+            getUserKey(mermaid.owner.nickname, mermaid.owner.company.key) === getUserKey(user.nickname, user.company.key)
+          }
+          documentName={mermaid.name}
+          copyLink={() => (typeof window !== 'undefined' ? window.location.href : '')}
           size="small"
-          type="light"
-          style={{ flexShrink: 0 }}
-        >
-          {copiedCode ? '✓' : <T className="tt-se">copy code</T>}
-        </Button>
-        <CopyToClipboard text={code}></CopyToClipboard>
-
-        <Button
-          onClick={handleCopySVG}
-          disabled={!renderedSvg}
-          icon={<ContentCopyIcon size="small" />}
-          size="small"
-          type="light"
-          style={{ flexShrink: 0 }}
-        >
-          {copiedSvg ? '✓' : 'SVG'}
-        </Button>
-
-        <Button onClick={handleShare} icon={<ShareIcon size="small" />} size="small" type="light" style={{ flexShrink: 0 }}>
-          <T className="tt-se">share</T>
-        </Button>
-
+        />
         <div style={{ width: '1px', height: '20px', background: 'var(--t-color-gray-4)' }} />
 
         <Button
@@ -792,21 +673,20 @@ export function MermaidViewPage({ mermaidKey }: { mermaidKey: string }) {
               </div>
             }
           >
-            <UserCodeEditor<string>
-              key={editorKey}
-              storeKey={`mermaid-uce-${mermaidKey}`}
-              languages={[{ value: 'plaintext', label: 'Mermaid' }]}
-              initialFiles={buildEditorFiles(code, 'diagram.mmd')}
-              initialFileName="diagram.mmd"
-              onFilesChange={handleFilesChange}
-              rightButtons={({ files, currentFileName }) => (
-                <FileWatcher
-                  currentFileName={currentFileName}
-                  files={files}
-                  currentFileNameRef={currentFileNameRef}
-                  onSwitch={handleFileSwitched}
-                />
-              )}
+            <UserCodeEditor<CodeLanguage.MERMAID>
+              leftButtons={() => [
+                <CopyToClipboard key="copy-code" disabled={!code} size="tiny" text={code}>
+                  code
+                </CopyToClipboard>,
+                <CopyToClipboard key="copy-svg" disabled={!renderedSvg} size="tiny" text={renderedSvg}>
+                  SVG
+                </CopyToClipboard>,
+              ]}
+              setSetFile={setSetFile}
+              storeKey={`mermaid-uce-${mermaid.key}`}
+              languages={[{ value: CodeLanguage.MERMAID, label: 'Mermaid' }]}
+              onCurrentFileNameChange={setCurrentFileName}
+              onFilesChange={setFiles}
               onlyCodeEditor
               withoutRunCodeButton
               withoutDownloadCopyButton
@@ -815,98 +695,101 @@ export function MermaidViewPage({ mermaidKey }: { mermaidKey: string }) {
 
           {error && <ErrorPanel error={error} />}
         </div>
+        <div className="jk-row nowrap top ht-100 wh-100 stretch" style={{ position: 'sticky', top: 0 }}>
+          <div className="ht-100 jk-col ow-hn flex-1 wh-100" ref={previewContainerRef}>
+            <ZoomToolbar
+              zoom={zoom}
+              isRendering={isRendering}
+              isFullscreen={isFullscreen}
+              onZoom={handleZoom}
+              onReset={handleResetView}
+              onToggleFullscreen={handleToggleFullscreen}
+            />
 
-        <div ref={previewContainerRef} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
-          <ZoomToolbar
-            zoom={zoom}
-            isRendering={isRendering}
-            isFullscreen={isFullscreen}
-            onZoom={handleZoom}
-            onReset={handleResetView}
-            onToggleFullscreen={handleToggleFullscreen}
-          />
-
-          <div
-            style={{
-              flex: 1,
-              overflow: 'hidden',
-              cursor: isDragging ? 'grabbing' : 'grab',
-              position: 'relative',
-              userSelect: 'none',
-              background: mermaidTheme === 'dark' ? '#1e1e2e' : 'var(--t-color-bg-1, #f8fafc)',
-            }}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            onWheel={handleWheel}
-          >
             <div
+              ref={wheelContainerRef}
+              className="wh-100"
               style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: `translate(calc(-50% + ${pan.x}px), calc(-50% + ${pan.y}px)) scale(${zoom})`,
-                transformOrigin: 'center center',
+                flex: 1,
+                overflow: 'hidden',
+                cursor: isDragging ? 'grabbing' : 'grab',
+                position: 'relative',
+                userSelect: 'none',
+                background: mermaidTheme === 'dark' ? '#1e1e2e' : 'var(--t-color-bg-1, #f8fafc)',
               }}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
             >
-              {renderedSvg ? (
-                <div dangerouslySetInnerHTML={{ __html: renderedSvg }} style={{ maxWidth: '100%', lineHeight: 0 }} />
-              ) : !isRendering && !error ? (
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '12px',
-                    color: 'var(--t-color-gray-5)',
-                    padding: '3rem',
-                    userSelect: 'none',
-                  }}
-                >
-                  <PlayArrowIcon size="huge" />
-                  <T className="tt-se">start typing to see your diagram</T>
-                </div>
-              ) : null}
-            </div>
-
-            {isRendering && !renderedSvg && (
               <div
                 style={{
                   position: 'absolute',
-                  inset: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'rgba(0,0,0,0.05)',
+                  top: '50%',
+                  left: '50%',
+                  transform: `translate(calc(-50% + ${pan.x}px), calc(-50% + ${pan.y}px)) scale(${zoom})`,
+                  transformOrigin: 'center center',
                 }}
               >
-                <LoadingIcon size="large" />
+                {renderedSvg ? (
+                  <div dangerouslySetInnerHTML={{ __html: renderedSvg }} style={{ maxWidth: '100%', lineHeight: 0 }} />
+                ) : !isRendering && !error ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '12px',
+                      color: 'var(--t-color-gray-5)',
+                      padding: '3rem',
+                      userSelect: 'none',
+                    }}
+                  >
+                    <PlayArrowIcon size="huge" />
+                    <T className="tt-se">start typing to see your diagram</T>
+                  </div>
+                ) : null}
               </div>
-            )}
 
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '8px',
-                right: '8px',
-                fontSize: '0.7rem',
-                color: 'var(--t-color-gray-5)',
-                background: 'var(--t-color-bg)',
-                padding: '3px 7px',
-                borderRadius: '4px',
-                border: '1px solid var(--t-color-gray-3)',
-                pointerEvents: 'none',
-                userSelect: 'none',
-              }}
-            >
-              scroll to zoom · drag to pan
+              {isRendering && !renderedSvg && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'rgba(0,0,0,0.05)',
+                  }}
+                >
+                  <LoadingIcon size="large" />
+                </div>
+              )}
+
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '8px',
+                  right: '8px',
+                  fontSize: '0.7rem',
+                  color: 'var(--t-color-gray-5)',
+                  background: 'var(--t-color-bg)',
+                  padding: '3px 7px',
+                  borderRadius: '4px',
+                  border: '1px solid var(--t-color-gray-3)',
+                  pointerEvents: 'none',
+                  userSelect: 'none',
+                }}
+              >
+                scroll to zoom · drag to pan
+              </div>
             </div>
           </div>
+          <MermaidAiChat code={code} setCodeRef={setCodeRef} />
         </div>
       </SplitPane>
 
-      <TemplatesModal isOpen={showTemplates} onClose={() => setShowTemplates(false)} onLoad={handleLoadTemplate} />
+      <TemplatesModal isOpen={showTemplates} onClose={() => setShowTemplates(false)} onLoad={setCode} />
 
       <ConfigModal
         isOpen={showConfig}
@@ -914,8 +797,6 @@ export function MermaidViewPage({ mermaidKey }: { mermaidKey: string }) {
         configJson={configJson}
         onConfigChange={setConfigJson}
       />
-
-      <ShareModal isOpen={showShare} onClose={() => setShowShare(false)} shareUrl={shareUrl} />
     </div>
   );
 }

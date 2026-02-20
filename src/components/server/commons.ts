@@ -1,9 +1,7 @@
 export {
-  // Already used
   LoginIcon,
   LogoutIcon,
   OpenInNewIcon,
-  // Editor icons
   ContentCopyIcon,
   DownloadIcon,
   ExpandMoreIcon,
@@ -17,7 +15,13 @@ export {
   SettingsIcon,
   ShareIcon,
   WarningIcon,
-  // Sign icons
   MinusIcon,
   PlusIcon,
+  ArrowBackIcon,
+  CheckIcon,
+  EditNoteIcon,
+  ErrorIcon,
+  ExclamationIcon,
+  SmartToyIcon,
+  SpinIcon,
 } from '@juki-team/base-ui/server-components';

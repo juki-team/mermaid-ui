@@ -10,27 +10,31 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "pull": "yarn add @juki-team/commons @juki-team/base-ui"
+    "pull": "dotenv -- pnpm add @juki-team/commons@latest @juki-team/base-ui@latest"
   },
   "engines": {
     "node": ">=24"
   },
   "dependencies": {
     "@ably/spaces": "^0.5.2",
-    "@juki-team/base-ui": "^1.4.34",
-    "@juki-team/commons": "^0.0.1065",
+    "@ai-sdk/react": "^3.0.97",
+    "@juki-team/base-ui": "^1.4.44",
+    "@juki-team/commons": "^0.0.1072",
     "@vercel/analytics": "^1.6.1",
     "ably": "^2.17.1",
+    "ai": "^6.0.95",
     "mermaid": "^11.12.3",
     "next": "16.1.6",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "swr": "^2.4.0"
+    "swr": "^2.4.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^10.0.0",
     "eslint-config-next": "16.1.6",
     "prettier": "^3.8.1",

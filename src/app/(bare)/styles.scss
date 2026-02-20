@@ -1,0 +1,28 @@
+@use "@juki-team/base-ui/styles/mixins" as utils;
+
+.right-panel {
+  height: calc(var(--100VH) - var(--first-content-section-height) - var(--pad-sm) - var(--pad-sm) - var(--top-horizontal-menu-height, 0px) - var(--bottom-horizontal-menu-height, 0px));
+  position: sticky;
+  top: 0;
+  overflow: auto;
+  @include utils.transition(width);
+}
+
+.vertical-text {
+  writing-mode: vertical-lr;
+  text-orientation: upright;
+}
+
+.ai-chat-messages {
+  .message {
+    max-width: 90%;
+    
+    &.user {
+      align-self: end;
+    }
+    
+    &.chat {
+      align-self: start;
+    }
+  }
+}

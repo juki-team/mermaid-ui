@@ -4,14 +4,16 @@ import { PropsWithChildren } from 'react';
 import { ButtonLogin } from './ButtonLogin';
 
 interface NotFoundCardProps {
-  title: string,
-  description: string,
+  title: string;
+  description: string;
 }
 
 export const NotFoundCard = ({ title, description, children }: PropsWithChildren<NotFoundCardProps>) => (
   <div className="jk-row ht-100">
-    <div className="jk-col jk-br-ie gap bc-we jk-pg">
-      <h3 className="tt-se"><T>{title}</T></h3>
+    <div className="jk-col jk-br gap bc-we jk-pg">
+      <h3 className="tt-se">
+        <T>{title}</T>
+      </h3>
       <Image
         alt="Juki surprised image"
         className="image-border"

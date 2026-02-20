@@ -3,7 +3,7 @@ import { jukiApiManager } from 'config';
 import { DEFAULT_METADATA } from 'config/constants';
 import { get, oneTab } from 'helpers';
 import { type Metadata } from 'next';
-import { ContentResponseType, MetadataResponseDTO } from 'types';
+import { ContentResponseType, MermaidResponseDTO, MetadataResponseDTO } from 'types';
 import { MermaidNotFoundCard } from './MermaidNotFoundCard';
 import { MermaidViewPage } from './MermaidViewPage';
 
@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const excalidrawKey = (await params).mermaidKey;
 
   const result = await get<ContentResponseType<MetadataResponseDTO>>(
-    jukiApiManager.API_V2.excalidraw.getMetadata({ params: { key: excalidrawKey } }).url,
+    jukiApiManager.API_V2.mermaid.getMetadata({ params: { key: excalidrawKey } }).url,
   );
 
   const { title, description } = result?.success ? result.content : { title: '', description: '' };
@@ -49,14 +49,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProblemViewPage({ params }: Props) {
   const mermaidKey = (await params).mermaidKey;
 
-  const mermaidResponse = await get<
-    ContentResponseType<{
-      name: string;
-    }>
-  >(jukiApiManager.API_V2.excalidraw.getData({ params: { key: mermaidKey } }).url);
+  const mermaidResponse = await get<ContentResponseType<MermaidResponseDTO>>(
+    jukiApiManager.API_V2.mermaid.getData({ params: { key: mermaidKey } }).url,
+  );
 
   if (mermaidResponse.success) {
-    return <MermaidViewPage mermaidKey={mermaidKey} />;
+    return <MermaidViewPage mermaid={mermaidResponse.content} />;
   }
 
   return <TwoContentLayout tabs={oneTab(<MermaidNotFoundCard />)} />;
