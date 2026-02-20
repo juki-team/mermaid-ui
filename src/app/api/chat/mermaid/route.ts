@@ -2,7 +2,7 @@ import { convertToModelMessages, stepCountIs, streamText, tool, UIMessage } from
 import z from 'zod';
 
 export async function POST(req: Request) {
-  const { messages, code }: { messages: UIMessage[]; code: string } = await req.json();
+  const { messages, code, error }: { messages: UIMessage[]; code: string; error: string } = await req.json();
 
   const result = streamText({
     model: 'anthropic/claude-sonnet-4.5',
@@ -32,6 +32,7 @@ REGLAS:
 
 CONTEXTO ACTUAL DEL PROBLEMA:
 <code>${code || ''}</code>
+<error>${error || ''}</error>
 `,
     messages: await convertToModelMessages(messages),
     tools: {

@@ -32,13 +32,7 @@ import { authorizedRequest, classNames, cleanRequest, contentResponse, getUserKe
 import { useFetcher, useStableRef, useUIStore, useUserStore } from 'hooks';
 import { MouseEvent, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import type { UserCodeEditorProps } from 'types';
-import {
-  CodeEditorFiles,
-  CodeLanguage,
-  ContentResponseType,
-  EntityMembersResponseDTO,
-  MermaidResponseDTO
-} from 'types';
+import { CodeEditorFiles, CodeLanguage, ContentResponseType, EntityMembersResponseDTO, MermaidResponseDTO } from 'types';
 import { DEFAULT_MERMAID_CODE, MERMAID_TEMPLATES } from './mermaid-templates';
 import { MermaidAiChat } from './MermaidAiChat';
 
@@ -587,7 +581,6 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
     value: mermaidTheme,
     label: MERMAID_THEMES.find((t) => t.value === mermaidTheme)?.label || mermaidTheme,
   };
-  console.log({ files, currentFileName, code });
 
   return (
     <div className="jk-col ow-hn" style={{ height: '100vh' }}>
@@ -668,7 +661,7 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
         </Button>
       </div>
 
-      <SplitPane direction="row" minSize={200} style={{ flex: 1, overflow: 'hidden' }}>
+      <SplitPane direction="row" minSize={200} style={{ flex: 1, overflow: 'hidden' }} closableFirstPane={{ align: 'center' }}>
         <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
           <Suspense
             fallback={
@@ -700,7 +693,7 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
 
           {error && <ErrorPanel error={error} />}
         </div>
-        <div className="jk-row nowrap top ht-100 wh-100 stretch" style={{ position: 'sticky', top: 0 }}>
+        <div className="jk-row nowrap top ht-100 wh-100 center" style={{ position: 'sticky', top: 0 }}>
           <div className="ht-100 jk-col ow-hn flex-1 wh-100" ref={previewContainerRef}>
             <ZoomToolbar
               zoom={zoom}
@@ -790,7 +783,7 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
               </div>
             </div>
           </div>
-          <MermaidAiChat code={code} setCodeRef={setCodeRef} />
+          <MermaidAiChat code={code} setCodeRef={setCodeRef} error={error} />
         </div>
       </SplitPane>
 

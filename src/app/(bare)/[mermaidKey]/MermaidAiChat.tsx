@@ -20,6 +20,7 @@ import { RefObject, useEffect, useState } from 'react';
 
 interface MermaidAiChatProps {
   code: string;
+  error: string;
   setCodeRef: RefObject<((code: string) => void) | null>;
 }
 
@@ -46,7 +47,7 @@ const SUGGESTIONS = [
   },
 ];
 
-export const MermaidAiChat = ({ code, setCodeRef }: MermaidAiChatProps) => {
+export const MermaidAiChat = ({ code, error, setCodeRef }: MermaidAiChatProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
 
@@ -58,19 +59,25 @@ export const MermaidAiChat = ({ code, setCodeRef }: MermaidAiChatProps) => {
 
   const t = useI18nStore((store) => store.i18n.t);
 
+  const appliedPartsRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
     for (const message of messages) {
-      for (const part of message.parts as {
-        type: string;
-        input: { code: string; title?: string; explanation?: string };
-        state: string;
-      }[]) {
+      (
+        message.parts as {
+          type: string;
+          input: { code: string; title?: string; explanation?: string };
+          state: string;
+        }[]
+      ).forEach((part, i) => {
         if (part?.type === 'tool-suggestMermaid' && part?.state === 'output-available') {
-          if (typeof part?.input?.code === 'string' && part.input.code.trim()) {
+          const key = `${message.id}-${i}`;
+          if (!appliedPartsRef.current.has(key) && typeof part?.input?.code === 'string' && part.input.code.trim()) {
+            appliedPartsRef.current.add(key);
             setCodeRef.current?.(part.input.code);
           }
         }
-      }
+      });
     }
   }, [messages, setCodeRef]);
 
@@ -85,7 +92,7 @@ export const MermaidAiChat = ({ code, setCodeRef }: MermaidAiChatProps) => {
 
   return (
     <div
-      className={classNames('right-panel jk-br-ie tx-s jk-col gap nowrap stretch', { 'jk-pg-xsm bc-we': isOpen })}
+      className={classNames('right-panel jk-br-ie tx-s jk-col gap nowrap stretch ht-100', { 'jk-pg-xsm bc-we': isOpen })}
       style={isOpen ? { width: '400px' } : { width: 'calc(var(--tx-h-m) + var(--pad-sm) + var(--pad-sm))' }}
     >
       <div
@@ -151,7 +158,7 @@ export const MermaidAiChat = ({ code, setCodeRef }: MermaidAiChatProps) => {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                void sendMessage({ text: input }, { body: { code } });
+                void sendMessage({ text: input }, { body: { code, error } });
                 setInput('');
               }}
             >
