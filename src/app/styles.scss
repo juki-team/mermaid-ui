@@ -1,0 +1,80 @@
+@use "@juki-team/base-ui/styles/mixins" as utils;
+
+body {
+  margin: 0;
+  
+  @include utils.md {
+    --top-horizontal-menu-height: 56px;
+  }
+  @include utils.lg {
+    --top-horizontal-menu-height: 56px;
+  }
+}
+
+:root {
+  @include utils.sm { --table-of-contents-width: 0px; }
+  
+  @include utils.md { --table-of-contents-width: 0; /*20vw;*/
+  }
+  
+  @include utils.lg { --table-of-contents-width: 0; /*25vw;*/
+  }
+  
+  @include utils.hg { --table-of-contents-width: 0; /*30vw;*/
+  }
+}
+
+.jk-breadcrumb {
+  // font-size: var(--text-small-size);
+  // line-height: var(--text-small-height);
+  border-color: var(--t-color-highlight-light);
+  padding-top: 4px;
+  padding-bottom: 4px;
+  border: none;
+}
+
+.hover-highlight:hover {
+  background: var(--t-color-highlight-light);
+}
+
+.jk-row.gap-borders {
+  box-sizing: border-box;
+  padding-left: var(--gap);
+  padding-right: var(--gap);
+}
+
+.jk-row.gap-full-borders {
+  box-sizing: border-box;
+  padding: calc(var(--gap) / 2) var(--gap);
+}
+
+.jk-col.gap-borders {
+  box-sizing: border-box;
+  padding-top: var(--gap);
+  padding-bottom: var(--gap);
+}
+
+.jk-col.gap-full-borders {
+  box-sizing: border-box;
+  padding: var(--gap) calc(var(--gap) / 2);
+}
+
+.jk-code-viewer-context {
+  width: 100%;
+  overflow: auto;
+  height: calc(var(--100VH) - 200px);
+  
+  .language-dot {
+    overflow: initial !important;
+  }
+}
+
+.word-break-break-word {
+  word-break: break-word;
+}
+
+.page-printable {
+  body {
+    background: black !important;
+  }
+}
