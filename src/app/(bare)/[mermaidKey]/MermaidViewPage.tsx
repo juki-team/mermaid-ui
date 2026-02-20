@@ -678,6 +678,7 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
             }
           >
             <UserCodeEditor<CodeLanguage.MERMAID>
+              initialFiles={fallbackData.files}
               leftButtons={() => [
                 <CopyToClipboard key="copy-code" disabled={!code} size="tiny" text={code}>
                   code
