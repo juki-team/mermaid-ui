@@ -32,7 +32,13 @@ import { authorizedRequest, classNames, cleanRequest, contentResponse, getUserKe
 import { useFetcher, useStableRef, useUIStore, useUserStore } from 'hooks';
 import { MouseEvent, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import type { UserCodeEditorProps } from 'types';
-import { CodeEditorFiles, CodeLanguage, ContentResponseType, EntityMembersResponseDTO, MermaidResponseDTO } from 'types';
+import {
+  CodeEditorFiles,
+  CodeLanguage,
+  ContentResponseType,
+  EntityMembersResponseDTO,
+  MermaidResponseDTO
+} from 'types';
 import { DEFAULT_MERMAID_CODE, MERMAID_TEMPLATES } from './mermaid-templates';
 import { MermaidAiChat } from './MermaidAiChat';
 
@@ -407,7 +413,7 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
   const [mermaidTheme, setMermaidTheme] = useState<MermaidTheme>('default');
   const [configJson, setConfigJson] = useState(DEFAULT_CONFIG);
   const [renderedSvg, setRenderedSvg] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string>(null);
   const [isRendering, setIsRendering] = useState(false);
   const [currentFileName, setCurrentFileName] = useState('');
 
@@ -450,7 +456,7 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
 
         if (renderId === renderIdRef.current) {
           setRenderedSvg(svg);
-          setError(null);
+          setError('');
           setIsRendering(false);
         }
       } catch (err: unknown) {
@@ -691,7 +697,7 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
             />
           </Suspense>
 
-          {error && <ErrorPanel error={error} />}
+          {!!error && <ErrorPanel error={error} />}
         </div>
         <div className="jk-row nowrap top ht-100 wh-100 center" style={{ position: 'sticky', top: 0 }}>
           <div className="ht-100 jk-col ow-hn flex-1 wh-100" ref={previewContainerRef}>
