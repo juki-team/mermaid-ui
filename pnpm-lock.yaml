@@ -15,8 +15,8 @@ importers:
         specifier: ^3.0.97
         version: 3.0.97(react@19.2.4)(zod@4.3.6)
       '@juki-team/base-ui':
-        specifier: ^1.4.44
-        version: 1.4.44(@ably/spaces@0.5.2(ably@2.17.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@excalidraw/excalidraw@0.18.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@types/react@19.2.14)(ably@2.17.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(immer@11.1.4)(motion@12.34.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(react-dom@19.2.4(react@19.2.4))(react-is@16.13.1)(react@19.2.4)(redux@5.0.1)(swr@2.4.0(react@19.2.4))(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.4))
+        specifier: ^1.4.45
+        version: 1.4.45(@ably/spaces@0.5.2(ably@2.17.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@excalidraw/excalidraw@0.18.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@types/react@19.2.14)(ably@2.17.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(immer@11.1.4)(motion@12.34.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(react-dom@19.2.4(react@19.2.4))(react-is@16.13.1)(react@19.2.4)(redux@5.0.1)(swr@2.4.0(react@19.2.4))(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.4))
       '@juki-team/commons':
         specifier: ^0.0.1072
         version: 0.0.1072
@@ -610,8 +610,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@juki-team/base-ui@1.4.44':
-    resolution: {integrity: sha512-nFgpjMrnq4PiD4pDpsEFWlKODcLCyfgG4YUUWCW0q+fYl2tKKycX0Es5593JBhu0he/YaQegMqugOpUqlkzD4w==, tarball: https://npm.pkg.github.com/download/@juki-team/base-ui/1.4.44/58c1a5a41999c53ed0faffe1d6480d56689f02f2}
+  '@juki-team/base-ui@1.4.45':
+    resolution: {integrity: sha512-+su6fXriRL+mTVzzPHRA1G62O715o4LApNlOAeKBQodqmbKiA5JHoxPlnBPG9geDn6R0etPVnL+E+NL6gFxKzQ==, tarball: https://npm.pkg.github.com/download/@juki-team/base-ui/1.4.45/7b6ecb94bab8d6b7bc81a36cc62d44376d0e6828}
     engines: {node: '>=24'}
     peerDependencies:
       '@ably/spaces': ^0.5.2
@@ -4991,7 +4991,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@juki-team/base-ui@1.4.44(@ably/spaces@0.5.2(ably@2.17.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@excalidraw/excalidraw@0.18.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@types/react@19.2.14)(ably@2.17.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(immer@11.1.4)(motion@12.34.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(react-dom@19.2.4(react@19.2.4))(react-is@16.13.1)(react@19.2.4)(redux@5.0.1)(swr@2.4.0(react@19.2.4))(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.4))':
+  '@juki-team/base-ui@1.4.45(@ably/spaces@0.5.2(ably@2.17.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@excalidraw/excalidraw@0.18.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@types/react@19.2.14)(ably@2.17.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(immer@11.1.4)(motion@12.34.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(react-dom@19.2.4(react@19.2.4))(react-is@16.13.1)(react@19.2.4)(redux@5.0.1)(swr@2.4.0(react@19.2.4))(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.4))':
     dependencies:
       '@ably/spaces': 0.5.2(ably@2.17.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@codemirror/autocomplete': 6.20.0

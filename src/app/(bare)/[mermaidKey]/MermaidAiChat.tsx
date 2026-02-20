@@ -8,11 +8,12 @@ import {
   EditNoteIcon,
   ErrorIcon,
   ExclamationIcon,
-  Input,
   MdMathViewer,
+  SendIcon,
   SmartToyIcon,
   SpinIcon,
   T,
+  TextArea,
 } from 'components';
 import { classNames, upperFirst } from 'helpers';
 import { useI18nStore, useRef } from 'hooks';
@@ -106,102 +107,101 @@ export const MermaidAiChat = ({ code, error, setCodeRef }: MermaidAiChatProps) =
       </div>
 
       {isOpen && (
-        <div>
-          <div className="jk-col gap stretch ai-chat-messages">
-            {messages.map((message) => (
-              <div key={message.id} className={classNames('message jk-br-ie bc-hl jk-pg-xsm', message.role)}>
-                {message.parts.map((part, i) => {
-                  switch (part.type) {
-                    case 'text':
-                      return (
-                        <div key={`${message.id}-${i}`}>
-                          <MdMathViewer source={part.text} flatView />
+        <div className="jk-col gap stretch ai-chat-messages flex-1">
+          <div className="flex-1" />
+          {messages.map((message) => (
+            <div key={message.id} className={classNames('message jk-br-ie bc-hl jk-pg-xsm', message.role)}>
+              {message.parts.map((part, i) => {
+                switch (part.type) {
+                  case 'text':
+                    return (
+                      <div key={`${message.id}-${i}`}>
+                        <MdMathViewer source={part.text} flatView />
+                      </div>
+                    );
+
+                  case 'tool-suggestMermaid':
+                    return (
+                      <div key={`${message.id}-${i}`} className="jk-col gap-sm">
+                        <div className="jk-row left fw-lr">
+                          {part?.state === 'input-streaming' ? (
+                            <>
+                              <T className="tt-se">generating diagram</T>&nbsp;
+                              <SpinIcon filledCircle size="tiny" className="cr-il" />
+                            </>
+                          ) : part?.state === 'output-available' ? (
+                            <>
+                              <T className="tt-se">diagram ready</T>&nbsp;
+                              <CheckIcon filledCircle size="tiny" className="cr-ss" />
+                            </>
+                          ) : (
+                            <CheckIcon filledCircle size="tiny" />
+                          )}
                         </div>
-                      );
 
-                    case 'tool-suggestMermaid':
-                      return (
-                        <div key={`${message.id}-${i}`} className="jk-col gap-sm">
-                          <div className="jk-row left fw-lr">
-                            {part?.state === 'input-streaming' ? (
-                              <>
-                                <T className="tt-se">generating diagram</T>&nbsp;
-                                <SpinIcon filledCircle size="tiny" className="cr-il" />
-                              </>
-                            ) : part?.state === 'output-available' ? (
-                              <>
-                                <T className="tt-se">diagram ready</T>&nbsp;
-                                <CheckIcon filledCircle size="tiny" className="cr-ss" />
-                              </>
-                            ) : (
-                              <CheckIcon filledCircle size="tiny" />
-                            )}
-                          </div>
+                        {/*{part?.state === 'output-available' && part?.input?.title && (*/}
+                        {/*  <div className="tx-s fw-bd">{part.input.title}</div>*/}
+                        {/*)}*/}
 
-                          {/*{part?.state === 'output-available' && part?.input?.title && (*/}
-                          {/*  <div className="tx-s fw-bd">{part.input.title}</div>*/}
-                          {/*)}*/}
+                        {/*{part?.state === 'output-available' && part?.input?.explanation && (*/}
+                        {/*  <div className="tx-s cr-g5">{part.input.explanation}</div>*/}
+                        {/*)}*/}
+                      </div>
+                    );
 
-                          {/*{part?.state === 'output-available' && part?.input?.explanation && (*/}
-                          {/*  <div className="tx-s cr-g5">{part.input.explanation}</div>*/}
-                          {/*)}*/}
-                        </div>
-                      );
-
-                    default:
-                      return null;
-                  }
-                })}
-              </div>
-            ))}
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void sendMessage({ text: input }, { body: { code, error } });
-                setInput('');
-              }}
-            >
-              <div className="jk-row wh-100 nowrap">
-                {status === 'submitted' ? (
-                  <CheckIcon />
-                ) : status === 'ready' ? (
-                  <EditNoteIcon />
-                ) : status === 'error' ? (
-                  <ErrorIcon />
-                ) : status === 'streaming' ? (
-                  <SpinIcon />
-                ) : (
-                  <ExclamationIcon />
-                )}
-                <Input
-                  expand
-                  value={input}
-                  placeholder={upperFirst(t('describe your diagram')) + '...'}
-                  onChange={setInput}
-                  disabled={status !== 'ready'}
-                />
-              </div>
-            </form>
-
-            <div className="jk-row gap jk-pg-xsm">
-              {SUGGESTIONS.map((sug) => (
-                <Button
-                  key={sug.label}
-                  onClick={() => {
-                    void sendMessage({ text: sug.prompt }, { body: { code } });
-                  }}
-                  icon={sug.icon}
-                  size="tiny"
-                  type="light"
-                >
-                  <T className="tt-se">{sug.label}</T>
-                </Button>
-              ))}
+                  default:
+                    return null;
+                }
+              })}
             </div>
+          ))}
 
-            <div ref={messagesEndRef} />
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void sendMessage({ text: input }, { body: { code, error } });
+              setInput('');
+            }}
+          >
+            <div className="jk-row wh-100 nowrap top gap">
+              {status === 'submitted' ? (
+                <CheckIcon />
+              ) : status === 'ready' ? (
+                <EditNoteIcon />
+              ) : status === 'error' ? (
+                <ErrorIcon />
+              ) : status === 'streaming' ? (
+                <SpinIcon />
+              ) : (
+                <ExclamationIcon />
+              )}
+              <TextArea
+                value={input}
+                placeholder={upperFirst(t('describe your diagram')) + '...'}
+                onChange={setInput}
+                disabled={status !== 'ready'}
+              />
+              <Button icon={<SendIcon />} submit />
+            </div>
+          </form>
+
+          <div className="jk-row gap jk-pg-xsm">
+            {SUGGESTIONS.map((sug) => (
+              <Button
+                key={sug.label}
+                onClick={() => {
+                  void sendMessage({ text: sug.prompt }, { body: { code } });
+                }}
+                icon={sug.icon}
+                size="tiny"
+                type="light"
+              >
+                <T className="tt-se">{sug.label}</T>
+              </Button>
+            ))}
           </div>
+
+          <div ref={messagesEndRef} />
         </div>
       )}
     </div>

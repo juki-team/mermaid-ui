@@ -32,13 +32,7 @@ import { authorizedRequest, classNames, cleanRequest, contentResponse, getUserKe
 import { useFetcher, useStableRef, useUIStore, useUserStore } from 'hooks';
 import { MouseEvent, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import type { UserCodeEditorProps } from 'types';
-import {
-  CodeEditorFiles,
-  CodeLanguage,
-  ContentResponseType,
-  EntityMembersResponseDTO,
-  MermaidResponseDTO
-} from 'types';
+import { CodeEditorFiles, CodeLanguage, ContentResponseType, EntityMembersResponseDTO, MermaidResponseDTO } from 'types';
 import { DEFAULT_MERMAID_CODE, MERMAID_TEMPLATES } from './mermaid-templates';
 import { MermaidAiChat } from './MermaidAiChat';
 

@@ -24,4 +24,5 @@ export {
   ExclamationIcon,
   SmartToyIcon,
   SpinIcon,
+  SendIcon,
 } from '@juki-team/base-ui/server-components';

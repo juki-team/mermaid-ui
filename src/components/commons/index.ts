@@ -26,6 +26,7 @@ export {
   MdMathViewer,
   DocumentMembersButton,
   DateLiteral,
+  TextArea,
 } from '@juki-team/base-ui';
 
 export * from './NotFoundCard';
