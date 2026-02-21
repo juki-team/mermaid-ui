@@ -25,4 +25,5 @@ export {
   SmartToyIcon,
   SpinIcon,
   SendIcon,
+  DoneAllIcon,
 } from '@juki-team/base-ui/server-components';

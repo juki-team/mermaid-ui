@@ -34,7 +34,7 @@ CONTEXTO ACTUAL DEL PROBLEMA:
 <code>${code || ''}</code>
 <error>${error || ''}</error>
 `,
-    messages: await convertToModelMessages(messages),
+    messages: await convertToModelMessages(messages).catch(() => []),
     tools: {
       suggestMermaid: tool({
         description: 'Entrega un diagrama Mermaid válido para renderizar en el cliente.',

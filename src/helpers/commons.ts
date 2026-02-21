@@ -20,4 +20,5 @@ export {
   toSortUrl,
   classNames,
   upperFirst,
+  downloadBlobAsFile,
 } from '@juki-team/base-ui/helpers';
