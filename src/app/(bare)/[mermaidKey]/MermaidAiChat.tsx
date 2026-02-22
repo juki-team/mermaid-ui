@@ -14,8 +14,8 @@ import {
   T,
   TextArea
 } from 'components';
-import { classNames, upperFirst } from 'helpers';
-import { useI18nStore, useRef } from 'hooks';
+import { classNames, getUserKey, upperFirst } from 'helpers';
+import { useI18nStore, useRef, useUserStore } from 'hooks';
 import { CSSProperties, ReactNode, RefObject, useEffect, useState } from 'react';
 
 interface MermaidAiChatProps {
@@ -61,12 +61,16 @@ const SUGGESTIONS = [
 export const MermaidAiChat = ({ mermaidKey, code, error, setCodeRef }: MermaidAiChatProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
+  const {
+    company: { key: companyKey },
+    nickname,
+  } = useUserStore((store) => store.user);
 
-  const storageKey = `mermaid-chat-${mermaidKey}`;
+  const storageKey = `jk-mermaid-chat-${mermaidKey}/${getUserKey(nickname, companyKey)}`;
 
   const initialMessages = (() => {
     try {
-      return JSON.parse(localStorage.getItem(storageKey) ?? '[]');
+      return JSON.parse(localStorage.getItem(storageKey) ?? '{}');
     } catch {
       localStorage.removeItem(storageKey);
       return [];

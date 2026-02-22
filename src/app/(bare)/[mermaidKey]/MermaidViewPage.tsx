@@ -1,5 +1,6 @@
 'use client';
 
+import { CodeEditor } from '@juki-team/base-ui';
 import {
   ArrowBackIcon,
   Button,
@@ -202,28 +203,15 @@ function ConfigModal({
               </div>
             }
           >
-            <UserCodeEditor<CodeLanguage.JSON>
+            <CodeEditor<CodeLanguage.JSON>
               key={configEditorKey}
-              storeKey={`mermaid-config-editor-${configEditorKey}`}
-              languages={[{ value: CodeLanguage.JSON, label: 'JSON' }]}
-              initialFiles={{
-                'config.json': {
-                  source: localConfig,
-                  language: CodeLanguage.JSON,
-                  index: 0,
-                  name: 'config.json',
-                  hidden: false,
-                  readonly: false,
-                  protected: false,
-                },
+              language={CodeLanguage.JSON}
+              source={localConfig}
+              onChange={({ source }) => {
+                if (source !== undefined) {
+                  setLocalConfig(source);
+                }
               }}
-              onFilesChange={(files) => {
-                const source = files['config.json']?.source;
-                if (source !== undefined) setLocalConfig(source);
-              }}
-              onlyCodeEditor
-              withoutRunCodeButton
-              withoutDownloadCopyButton
             />
           </Suspense>
         </div>
@@ -238,7 +226,7 @@ function ConfigModal({
             <T className="tt-se">cancel</T>
           </Button>
           <Button onClick={handleApply}>
-            <T className="tt-se">apply & close</T>
+            <T className="tt-se">apply and close</T>
           </Button>
         </div>
       </div>
@@ -527,7 +515,7 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
                   </CopyToClipboard>,
                 ]}
                 setSetFile={setSetFile}
-                storeKey={`mermaid-uce-${mermaid.key}`}
+                storeKey={`mermaid-${mermaid.key}`}
                 languages={[{ value: CodeLanguage.MERMAID, label: 'Mermaid' }]}
                 onCurrentFileNameChange={setCurrentFileName}
                 onFilesChange={setFiles}
@@ -564,10 +552,10 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
                   userSelect: 'none',
                   background: mermaidTheme === 'dark' ? '#1e1e2e' : 'var(--t-color-bg-1, #f8fafc)',
                 }}
-                onMousedown={handleMouseDown}
-                onMousemove={handleMouseMove}
-                onMouseup={handleMouseUp}
-                onMouseleave={handleMouseUp}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
               >
                 <div
                   style={{
