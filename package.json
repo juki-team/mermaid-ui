@@ -10,7 +10,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "pull": "pnpm remove @juki-team/commons @juki-team/base-ui && dotenv -- pnpm add @juki-team/commons@latest @juki-team/base-ui@latest"
+    "git:push": "git push origin main && git push origin --tags",
+    "pull": "pnpm remove @juki-team/commons @juki-team/base-ui && dotenv -- pnpm add @juki-team/commons@latest @juki-team/base-ui@latest",
+    "push": "pnpm version patch && pnpm git:push;"
   },
   "engines": {
     "node": ">=24"
