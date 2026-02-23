@@ -27,7 +27,7 @@ import { JUKI_SERVICE_V2_URL } from 'config/constants';
 import { authorizedRequest, classNames, cleanRequest, contentResponse, getUserKey, oneTab } from 'helpers';
 import { useFetcher, useStableRef, useUIStore, useUserStore } from 'hooks';
 import { MouseEvent, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { CodeEditorFiles, CodeLanguage, ContentResponseType, EntityMembersResponseDTO, MermaidResponseDTO, MermaidTheme, UserCodeEditorProps } from 'types';
+import { CodeEditorFiles, CodeLanguage, ContentResponse, EntityMembersResponseDTO, MermaidResponseDTO, MermaidTheme, UserCodeEditorProps } from 'types';
 import { GraphicToolbar } from './GraphicToolbar';
 import { DEFAULT_MERMAID_CODE, MERMAID_TEMPLATES } from './mermaid-templates';
 import { MermaidAiChat } from './MermaidAiChat';
@@ -159,15 +159,6 @@ function ConfigModal({
 }) {
   const [localConfig, setLocalConfig] = useState(configJson);
   const [parseError, setParseError] = useState<string | null>(null);
-  const [configEditorKey, setConfigEditorKey] = useState(0);
-
-  useEffect(() => {
-    if (isOpen) {
-      setLocalConfig(configJson);
-      setParseError(null);
-      setConfigEditorKey((k) => k + 1);
-    }
-  }, [isOpen, configJson]);
 
   const handleApply = () => {
     try {
@@ -204,7 +195,6 @@ function ConfigModal({
             }
           >
             <CodeEditor<CodeLanguage.JSON>
-              key={configEditorKey}
               language={CodeLanguage.JSON}
               source={localConfig}
               onChange={({ source }) => {
@@ -272,7 +262,7 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
     isLoading,
     isValidating,
     mutate: reloadMermaid,
-  } = useFetcher<ContentResponseType<MermaidResponseDTO>>(jukiApiManager.API_V2.mermaid.getData({ params: { key: fallbackData.key } }).url, {
+  } = useFetcher<ContentResponse<MermaidResponseDTO>>(jukiApiManager.API_V2.mermaid.getData({ params: { key: fallbackData.key } }).url, {
     fallbackData: JSON.stringify(contentResponse('fallback data', fallbackData)),
   });
   const mermaid = data?.success ? data.content : fallbackData;
@@ -305,7 +295,7 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
         params: { key: fallbackData.key },
         body,
       });
-      cleanRequest<ContentResponseType<{ key: string }>>(await authorizedRequest(url, options));
+      cleanRequest<ContentResponse<{ key: string }>>(await authorizedRequest(url, options));
       await reloadMermaid();
       timeoutRef.current = null;
     }, 400);
@@ -627,7 +617,7 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
     >
       <TemplatesModal isOpen={showTemplates} onClose={() => setShowTemplates(false)} onLoad={setCode} />
 
-      <ConfigModal isOpen={showConfig} onClose={() => setShowConfig(false)} configJson={configJson} onConfigChange={setConfigJson} />
+      <ConfigModal key={String(showConfig)} isOpen={showConfig} onClose={() => setShowConfig(false)} configJson={configJson} onConfigChange={setConfigJson} />
       <div className="jk-row gap jk-pg-xsm">
         <Link href="/">
           <Button type="text" icon={<ArrowBackIcon />} tooltipContent="back home" />

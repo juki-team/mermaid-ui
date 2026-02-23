@@ -4,13 +4,12 @@ import { EMPTY_COMPANY, EMPTY_USER } from 'config/constants';
 import { get } from 'helpers';
 import { type PropsWithChildren } from 'react';
 import './styles.scss';
-import type { ContentResponseType, PingResponseDTO } from 'types';
+import type { ContentResponse, PingResponseDTO } from 'types';
 import { Initializer } from './Initializer';
 
 const getInitialUser = async () => {
-  
-  const session = await get<ContentResponseType<PingResponseDTO>>(jukiApiManager.API_V2.auth.ping().url);
-  
+  const session = await get<ContentResponse<PingResponseDTO>>(jukiApiManager.API_V2.auth.ping().url);
+
   return {
     user: session?.success ? session?.content.user : EMPTY_USER,
     company: session?.success ? session?.content.company : EMPTY_COMPANY,
@@ -22,9 +21,7 @@ export default async function Layout({ children }: PropsWithChildren) {
   return (
     <UserStoreProvider initialUser={await getInitialUser()}>
       <Initializer />
-      <RootLayout>
-        {children}
-      </RootLayout>
+      <RootLayout>{children}</RootLayout>
     </UserStoreProvider>
   );
 }

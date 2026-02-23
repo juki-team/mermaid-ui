@@ -70,7 +70,7 @@ export const MermaidAiChat = ({ mermaidKey, code, error, setCodeRef }: MermaidAi
 
   const initialMessages = (() => {
     try {
-      return JSON.parse(localStorage.getItem(storageKey) ?? '{}');
+      return JSON.parse(localStorage.getItem(storageKey) ?? '[]');
     } catch {
       localStorage.removeItem(storageKey);
       return [];
@@ -81,7 +81,7 @@ export const MermaidAiChat = ({ mermaidKey, code, error, setCodeRef }: MermaidAi
     transport: new DefaultChatTransport({
       api: '/api/chat/mermaid',
     }),
-    messages: initialMessages,
+    messages: Array.isArray(initialMessages) ? initialMessages : [],
   });
 
   useEffect(() => {
@@ -92,6 +92,7 @@ export const MermaidAiChat = ({ mermaidKey, code, error, setCodeRef }: MermaidAi
 
   const appliedPartsRef = useRef<Set<string>>(new Set());
 
+  console.log({ messages });
   useEffect(() => {
     for (const message of messages) {
       (

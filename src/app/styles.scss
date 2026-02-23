@@ -2,26 +2,25 @@
 
 body {
   margin: 0;
+  overflow: visible;
   
-  @include utils.md {
-    --top-horizontal-menu-height: 56px;
-  }
-  @include utils.lg {
-    --top-horizontal-menu-height: 56px;
+  #juki-app {
+    overflow: auto !important;
+    //height: auto !important;
   }
 }
 
 :root {
-  @include utils.sm { --table-of-contents-width: 0px; }
-  
-  @include utils.md { --table-of-contents-width: 0; /*20vw;*/
-  }
-  
-  @include utils.lg { --table-of-contents-width: 0; /*25vw;*/
-  }
-  
-  @include utils.hg { --table-of-contents-width: 0; /*30vw;*/
-  }
+  --max-read-width: 64ch;
+  --max-view-width: 100ch;
+}
+
+.read-width {
+  max-width: var(--max-read-width);
+}
+
+.view-width {
+  max-width: var(--max-view-width);
 }
 
 .jk-breadcrumb {

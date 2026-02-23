@@ -1,31 +1,35 @@
-# Excalidraw UI
+# Juki Mermaid
 
-A **real-time collaborative drawing application** built on [Excalidraw](https://excalidraw.com/), integrated as part of
-the **Juki Judge** platform - an educational platform designed to improve programming skills.
+A **diagram editor** built on [Mermaid](https://mermaid.js.org/), integrated as part of the **Juki** platform. Create,
+edit, and share diagrams with an AI assistant.
 
 ## Overview
 
-Excalidraw UI provides a digital whiteboard where multiple users can collaborate simultaneously on diagrams, sketches,
-and visual notes with instant synchronization.
+Juki Mermaid provides a browser-based editor where you can write Mermaid diagram code and see a live preview. An AI
+assistant (powered by Claude) helps you generate and fix diagrams from natural language descriptions.
 
 ## Features
 
-- **Real-time Collaboration** - Instant synchronization of changes between users
-- **Cursor Tracking** - See where other collaborators are drawing
-- **Member Presence** - View connected collaborators with avatars and names
-- **Persistence** - Drawings are saved and synced with the Juki server
-- **Dynamic Routes** - Each drawing has its own URL (`/[excalidrawKey]`)
+- **Live Preview** - Instant rendering of Mermaid diagrams as you type
+- **AI Assistant** - Generate or fix diagrams by describing them in natural language
+- **Multiple Diagram Types** - Flowcharts, sequence diagrams, class diagrams, Gantt charts, ER diagrams, and more
+- **Themes** - Switch between Default, Dark, Forest, Neutral, and Base themes
+- **Export** - Download diagrams as SVG or PNG
+- **Templates** - Start from pre-built diagram templates
+- **Persistence** - Diagrams are saved and synced with the Juki server
+- **Sharing** - Share diagrams via link or invite collaborators
+- **Dynamic Routes** - Each diagram has its own URL (`/[mermaidKey]`)
 
 ## Tech Stack
 
-| Category         | Technology            |
-|------------------|-----------------------|
-| Framework        | Next.js 16 + React 19 |
-| Language         | TypeScript 5          |
-| Drawing Editor   | Excalidraw            |
-| Real-time        | Ably + @ably/spaces   |
-| Base UI          | @juki-team/base-ui    |
-| State Management | Zustand               |
+| Category        | Technology                    |
+|-----------------|-------------------------------|
+| Framework       | Next.js 16 + React 19         |
+| Language        | TypeScript 5                  |
+| Diagram Engine  | Mermaid                       |
+| AI              | Claude (Anthropic) via AI SDK |
+| Base UI         | @juki-team/base-ui            |
+| Package Manager | pnpm                          |
 
 ## Project Structure
 
@@ -33,25 +37,20 @@ and visual notes with instant synchronization.
 src/
 ├── app/                          # Routes and layouts (Next.js App Router)
 │   ├── (bare)/                   # Route group without main layout
-│   │   └── [excalidrawKey]/      # Dynamic page for each drawing
-│   │       ├── page.tsx          # Main page (server component)
-│   │       ├── ExcalidrawViewPage.tsx  # Editor component (client component)
-│   │       └── ExcalidrawNotFoundCard.tsx
+│   │   ├── page.tsx              # Landing page
+│   │   └── [mermaidKey]/         # Dynamic page for each diagram
+│   │       ├── page.tsx          # Server component
+│   │       ├── MermaidViewPage.tsx    # Main editor (client component)
+│   │       ├── MermaidAiChat.tsx      # AI chat panel
+│   │       ├── GraphicToolbar.tsx     # Zoom/export toolbar
+│   │       └── mermaid-templates.ts  # Built-in templates
 │   └── api/
-│       └── version/              # Version endpoint
+│       └── chat/mermaid/         # AI chat endpoint (Claude)
 ├── components/                   # Reusable React components
-│   ├── layout/                   # Layouts
 │   ├── commons/                  # Common components
-│   ├── styles/                   # Style components
 │   └── server/                   # Server-side components
 ├── config/                       # App configuration
-│   └── constants/
-│       ├── routes.ts             # Metadata definitions
-│       ├── commons.ts            # Common constants
-│       └── settings.ts
 ├── hooks/                        # Custom hooks
-│   ├── useRouter.ts
-│   └── useSearchParams.ts
 ├── helpers/                      # Utility functions
 ├── types/                        # TypeScript type definitions
 └── public/                       # Static assets
@@ -61,59 +60,40 @@ src/
 
 ### Prerequisites
 
-- Node.js 20+
-- Yarn
+- Node.js 24+
+- pnpm
 
 ### Installation
 
 ```bash
-# Install dependencies
-yarn install
+pnpm install
 ```
 
 ### Development
 
 ```bash
-# Start development server (port 3075)
-yarn dev
+# Start development server (port 3076)
+pnpm dev
 ```
 
-Open [http://localhost:3075](http://localhost:3075) with your browser to see the result.
+Open [http://localhost:3076](http://localhost:3076) with your browser.
 
 ### Production
 
 ```bash
-# Build for production
-yarn build
-
-# Start production server
-yarn start
+pnpm build
+pnpm start
 ```
 
 ## Available Scripts
 
-| Script       | Description                           |
-|--------------|---------------------------------------|
-| `yarn dev`   | Start development server on port 3075 |
-| `yarn build` | Build the application for production  |
-| `yarn start` | Start the production server           |
-| `yarn lint`  | Run ESLint                            |
-
-## Architecture
-
-### Real-time Collaboration
-
-The application uses **Ably** for real-time communication:
-
-- **LiveObjects** - Synchronize drawing elements between users
-- **Spaces** - Manage collaborative spaces with cursor tracking
-- **Presence** - Track connected members in each drawing session
-
-### State Management
-
-- **Zustand stores** - Global state management
-- **Custom hooks** - UI, router, user, and Ably hooks
-- **Refs** - Performance optimization for frequently changing data
+| Script       | Description                            |
+|--------------|----------------------------------------|
+| `pnpm dev`   | Start development server on port 3076  |
+| `pnpm build` | Build the application for production   |
+| `pnpm start` | Start the production server            |
+| `pnpm lint`  | Run ESLint                             |
+| `pnpm pull`  | Update `@juki-team` packages to latest |
 
 ## Version
 
@@ -122,14 +102,11 @@ The application uses **Ably** for real-time communication:
 ## Related Projects
 
 - [Juki](http://juki.app/) - Main Juki platform
-- [Juki Judge](https://judge.juki.app) - Platform for online programming competitions where users can benchmark their
-  skills and compete with fellow programmers
-- [Juki Coach](https://coach.juki.app/) - AI-powered programming coach with personalized learning paths for programmers
-  at every skill level
-- [Juki Utils](https://utils.juki.app/) - Development utilities as test case generator, url shortener, excalidraw
-  creation
-- [Juki IDE](https://ide.juki.app/) - Online code editor supporting C, C++, Java, JavaScript, and Python
-- [Juki URL Shortener](http://juki.ly/) - URL shortening service for creating concise, shareable links
+- [Juki Judge](https://judge.juki.app) - Platform for online programming competitions
+- [Juki Coach](https://coach.juki.app/) - AI-powered programming coach
+- [Juki Utils](https://utils.juki.app/) - Development utilities
+- [Juki IDE](https://ide.juki.app/) - Online code editor
+- [Juki Excalidraw](https://excalidraw.juki.app/) - Online excalidraw
 - [@juki-team/base-ui](https://www.npmjs.com/package/@juki-team/base-ui) - Juki team UI components
 
 ## License

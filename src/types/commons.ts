@@ -1,10 +1,10 @@
 export { ErrorCode, Theme, Status, HTTPMethod, CodeLanguage } from '@juki-team/commons';
 
 export type {
-  ContentResponseType,
+  ContentResponse,
+  ErrorResponse,
   PingResponseDTO,
-  ContentsResponseType,
-  ErrorResponseType,
+  ContentsResponse,
   MetadataResponseDTO,
   MermaidResponseDTO,
   EntityMembersResponseDTO,

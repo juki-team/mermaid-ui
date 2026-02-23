@@ -2,21 +2,21 @@
 
 import { HEADER_JUKI_FORWARDED_HOST } from 'config/constants';
 import { cookies, headers } from 'next/headers';
-import { ContentResponseType, ContentsResponseType, ErrorCode, ErrorResponseType } from 'types';
+import { ContentResponse, ContentsResponse, ErrorCode, ErrorResponse } from 'types';
 import { cleanRequest, getAuthorizedRequest } from './commons';
 
-export const get = async <T extends ContentResponseType<unknown> | ContentsResponseType<unknown>, >(url: string) => {
+export const get = async <T extends ContentResponse<unknown> | ContentsResponse<unknown>>(url: string) => {
   try {
     const headersStore = await headers();
-    
+
     const cookieStore = await cookies();
-    
+
     const host = headersStore.get('host') || '';
     const protocol = headersStore.get('x-forwarded-proto') ?? 'https';
     const origin = `${protocol}://${host}`;
     const cookieHeader = cookieStore
       .getAll()
-      .map(c => `${c.name}=${c.value}`)
+      .map((c) => `${c.name}=${c.value}`)
       .join('; ');
     const customHeaders = {
       origin,
@@ -24,14 +24,14 @@ export const get = async <T extends ContentResponseType<unknown> | ContentsRespo
       [HEADER_JUKI_FORWARDED_HOST]: host,
       Cookie: cookieHeader,
     };
-    
+
     return cleanRequest<T>(
       await getAuthorizedRequest(encodeURI(url), {
         headers: customHeaders,
       }),
     );
   } catch (error) {
-    const errorResponse: ErrorResponseType = {
+    const errorResponse: ErrorResponse = {
       success: false,
       message: (error as Error)?.message ?? `Error on get "${url}"`,
       errors: [
