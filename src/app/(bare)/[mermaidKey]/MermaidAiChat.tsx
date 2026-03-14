@@ -2,18 +2,7 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
-import {
-  Button,
-  CheckIcon,
-  ErrorIcon,
-  ExclamationIcon,
-  MdMathViewer,
-  SendIcon,
-  SmartToyIcon,
-  SpinIcon,
-  T,
-  TextArea
-} from 'components';
+import { Button, CheckIcon, ErrorIcon, ExclamationIcon, MdMathViewer, SendIcon, SmartToyIcon, SpinIcon, T, TextArea } from 'components';
 import { classNames, getUserKey, upperFirst } from 'helpers';
 import { useI18nStore, useRef, useUserStore } from 'hooks';
 import { CSSProperties, ReactNode, RefObject, useEffect, useState } from 'react';

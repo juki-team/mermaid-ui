@@ -4,9 +4,11 @@ import { CodeEditor } from '@juki-team/base-ui';
 import {
   ArrowBackIcon,
   Button,
+  ContentCopyIcon,
   CopyToClipboard,
   DateLiteral,
   DocumentMembersButton,
+  DownloadIcon,
   ExpandMoreIcon,
   InfoIIcon,
   LoadingIcon,
@@ -24,7 +26,8 @@ import {
 } from 'components';
 import { jukiApiManager } from 'config';
 import { JUKI_SERVICE_V2_URL } from 'config/constants';
-import { authorizedRequest, classNames, cleanRequest, contentResponse, getUserKey, oneTab } from 'helpers';
+import domToImage from 'dom-to-image-more';
+import { authorizedRequest, classNames, cleanRequest, contentResponse, downloadBlobAsFile, getUserKey, oneTab } from 'helpers';
 import { useFetcher, useStableRef, useUIStore, useUserStore } from 'hooks';
 import { MouseEvent, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { CodeEditorFiles, CodeLanguage, ContentResponse, EntityMembersResponseDTO, MermaidResponseDTO, MermaidTheme, UserCodeEditorProps } from 'types';
@@ -327,6 +330,7 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
   const dragStartRef = useRef({ x: 0, y: 0 });
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const wheelContainerRef = useRef<HTMLDivElement>(null);
+  const svgContainerRef = useRef<HTMLDivElement>(null);
 
   const code = files[currentFileName]?.source || DEFAULT_MERMAID_CODE;
 
@@ -451,6 +455,36 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
     label: MERMAID_THEMES.find((t) => t.value === mermaidTheme)?.label || mermaidTheme,
   };
 
+  const handleExportSVG = useCallback(() => {
+    if (!renderedSvg) return;
+    const blob = new Blob([renderedSvg], { type: 'image/svg+xml;charset=utf-8' });
+    downloadBlobAsFile(blob, `diagram-${mermaid.key}.svg`);
+  }, [renderedSvg, mermaid.key]);
+
+  const getPngBlob = useCallback(() => {
+    const node = svgContainerRef.current;
+    if (!node) return null;
+    return domToImage.toBlob(node, { bgcolor: mermaidTheme === 'dark' ? '#1e1e2e' : '#ffffff', scale: 2 });
+  }, [mermaidTheme]);
+
+  const handleExportPNG = useCallback(async () => {
+    try {
+      const blob = await getPngBlob();
+      if (blob) downloadBlobAsFile(blob, `diagram-${mermaid.key}.png`);
+    } catch (error) {
+      console.error('Error exporting PNG:', error);
+    }
+  }, [getPngBlob, mermaid.key]);
+
+  const handleCopyPNG = useCallback(async () => {
+    try {
+      const blob = await getPngBlob();
+      if (blob) await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    } catch (error) {
+      console.error('Error copying PNG:', error);
+    }
+  }, [getPngBlob]);
+
   return (
     <TwoContentLayout
       tabButtons={[
@@ -497,12 +531,18 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
               <UserCodeEditor<CodeLanguage.MERMAID>
                 initialFiles={fallbackData.files}
                 leftButtons={() => [
-                  <CopyToClipboard key="copy-code" disabled={!code} size="tiny" text={code}>
-                    code
-                  </CopyToClipboard>,
                   <CopyToClipboard key="copy-svg" disabled={!renderedSvg} size="tiny" text={renderedSvg}>
                     SVG
                   </CopyToClipboard>,
+                  <Button key="copy-png" onClick={handleCopyPNG} disabled={!renderedSvg} icon={<ContentCopyIcon size="small" />} size="tiny">
+                    PNG
+                  </Button>,
+                  <Button key="download-svg" onClick={handleExportSVG} disabled={!renderedSvg} icon={<DownloadIcon size="small" />} size="tiny">
+                    SVG
+                  </Button>,
+                  <Button key="download-png" onClick={handleExportPNG} disabled={!renderedSvg} icon={<DownloadIcon size="small" />} size="tiny">
+                    PNG
+                  </Button>,
                 ]}
                 setSetFile={setSetFile}
                 storeKey={`mermaid-${mermaid.key}`}
@@ -511,7 +551,6 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
                 onFilesChange={setFiles}
                 onlyCodeEditor
                 withoutRunCodeButton
-                withoutDownloadCopyButton
               />
             </Suspense>
 
@@ -557,7 +596,7 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
                   }}
                 >
                   {renderedSvg ? (
-                    <div dangerouslySetInnerHTML={{ __html: renderedSvg }} style={{ maxWidth: '100%', lineHeight: 0 }} />
+                    <div ref={svgContainerRef} dangerouslySetInnerHTML={{ __html: renderedSvg }} style={{ maxWidth: '100%', lineHeight: 0 }} />
                   ) : !isRendering && !error ? (
                     <div
                       style={{
