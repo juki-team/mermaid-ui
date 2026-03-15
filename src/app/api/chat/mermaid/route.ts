@@ -39,12 +39,9 @@ CONTEXTO ACTUAL DEL PROBLEMA:
       suggestMermaid: tool({
         description: 'Entrega un diagrama Mermaid válido para renderizar en el cliente.',
         inputSchema: z.object({
-          code: z.string().describe('Código Mermaid válido y completo, listo para renderizar.'),
+          content: z.string().describe('Código Mermaid válido y completo, listo para renderizar.'),
           title: z.string().optional().describe('Título descriptivo del diagrama.'),
-          explanation: z
-            .string()
-            .optional()
-            .describe('Breve explicación de lo que representa el diagrama o los cambios realizados.'),
+          explanation: z.string().optional().describe('Breve explicación de lo que representa el diagrama o los cambios realizados.'),
         }),
         execute: async (args) => {
           return { status: 'success', data: args };

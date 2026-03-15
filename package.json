@@ -1,5 +1,5 @@
 {
-  "name": "excalidraw-ui",
+  "name": "mermaid-ui",
   "version": "0.1.5",
   "private": true,
   "scripts": {
@@ -11,7 +11,7 @@
     "start": "next start",
     "lint": "eslint",
     "git:push": "git push origin main && git push origin --tags",
-    "pull": "pnpm remove @juki-team/commons @juki-team/base-ui && dotenv -- pnpm add @juki-team/commons@latest @juki-team/base-ui@latest",
+    "pull": "dotenv -- pnpm add @juki-team/commons@latest @juki-team/base-ui@latest",
     "push": "pnpm version patch && pnpm git:push;"
   },
   "engines": {
@@ -20,8 +20,8 @@
   "dependencies": {
     "@ably/spaces": "^0.5.2",
     "@ai-sdk/react": "^3.0.118",
-    "@juki-team/base-ui": "^1.4.47",
-    "@juki-team/commons": "^0.1.1",
+    "@juki-team/base-ui": "^1.4.68",
+    "@juki-team/commons": "^0.1.4",
     "@vercel/analytics": "^2.0.1",
     "ably": "^2.20.0",
     "ai": "^6.0.116",

@@ -104,10 +104,11 @@ pnpm start
 - [Juki](http://juki.app/) - Main Juki platform
 - [Juki Judge](https://judge.juki.app) - Platform for online programming competitions
 - [Juki Coach](https://coach.juki.app/) - AI-powered programming coach
-- [Juki Utils](https://utils.juki.app/) - Development utilities
+- [Juki Utils](https://utils.juki.app/) - Utilities
 - [Juki IDE](https://ide.juki.app/) - Online code editor
-- [Juki Excalidraw](https://excalidraw.juki.app/) - Online excalidraw
-- [@juki-team/base-ui](https://www.npmjs.com/package/@juki-team/base-ui) - Juki team UI components
+- [Juki Excalidraw](https://excalidraw.juki.app/) - Whiteboard
+- [Juki Markdown](https://md.juki.app/) - Markdown editor
+- [@juki-team/base-ui](https://www.npmjs.com/package/@juki-team/base-ui) - Shared UI library
 
 ## License
 

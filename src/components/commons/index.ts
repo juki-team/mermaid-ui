@@ -27,6 +27,7 @@ export {
   DocumentMembersButton,
   DateLiteral,
   TextArea,
+  AiChatPanel,
 } from '@juki-team/base-ui';
 
 export * from './NotFoundCard';

@@ -1,10 +1,3 @@
-export const DEFAULT_MERMAID_CODE = `flowchart TD
-    A[Start] -->|Get input| B{Is valid?}
-    B -->|Yes| C[Process data]
-    B -->|No| D[Show error]
-    C --> E[Done ✓]
-    D --> A`;
-
 export interface MermaidTemplate {
   name: string;
   category: string;

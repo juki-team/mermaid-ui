@@ -14,9 +14,9 @@ type Props = {
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const excalidrawKey = (await params).mermaidKey;
+  const mermaidKey = (await params).mermaidKey;
 
-  const result = await get<ContentResponse<MetadataResponseDTO>>(jukiApiManager.API_V2.mermaid.getMetadata({ params: { key: excalidrawKey } }).url);
+  const result = await get<ContentResponse<MetadataResponseDTO>>(jukiApiManager.API_V2.mermaid.getMetadata({ params: { key: mermaidKey } }).url);
 
   const { title, description } = result?.success ? result.content : { title: '', description: '' };
 
