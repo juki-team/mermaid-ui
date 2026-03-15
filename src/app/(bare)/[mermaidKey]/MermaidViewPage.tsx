@@ -27,7 +27,14 @@ import { JUKI_SERVICE_V2_URL } from 'config/constants';
 import { authorizedRequest, classNames, cleanRequest, contentResponse, getUserKey, oneTab } from 'helpers';
 import { useFetcher, useStableRef, useUIStore, useUserStore } from 'hooks';
 import { CSSProperties, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { CodeEditorFiles, CodeLanguage, ContentResponse, EntityMembersResponseDTO, MermaidResponseDTO, MermaidTheme } from 'types';
+import {
+  CodeEditorFiles,
+  CodeLanguage,
+  ContentResponse,
+  EntityMembersResponseDTO,
+  MermaidResponseDTO,
+  MermaidTheme
+} from 'types';
 import { MERMAID_TEMPLATES } from './mermaid-templates';
 
 const MERMAID_THEMES: { value: MermaidTheme; label: string }[] = [
@@ -297,7 +304,6 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
   const setCode = useCallback(
     (source: string) => {
       const currentFileName = currentFileNameRef.current;
-      console.log('setCode', { currentFileName }, filesRef.current[currentFileName]);
       if (filesRef.current[currentFileName]?.source !== source) {
         userCodeEditorRef.current?.setFile(currentFileName, {
           ...filesRef.current[currentFileName],
@@ -334,9 +340,7 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
       ).forEach((part, i) => {
         if (part?.type === 'tool-suggestMermaid' && part?.state === 'output-available') {
           const key = `${message.id}-${i}`;
-          // console.log(key, part);
           if (!appliedPartsRef.current.has(key) && typeof part?.output?.data?.content === 'string') {
-            console.log(key, { part });
             setCode(part.output.data.content);
             appliedPartsRef.current.add(key);
           }
@@ -345,7 +349,6 @@ export function MermaidViewPage({ mermaid: fallbackData }: { mermaid: MermaidRes
     }
   });
   const storeKey = `mermaid-${mermaid.key}`;
-  console.log({ files, currentFileName });
 
   return (
     <TwoContentLayout

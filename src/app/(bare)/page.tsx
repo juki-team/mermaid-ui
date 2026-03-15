@@ -17,7 +17,7 @@ import {
   UserChip,
 } from 'components';
 import { jukiApiManager } from 'config';
-import { EMPTY_ENTITY_MEMBERS, JUKI_SERVICE_V2_URL } from 'config/constants';
+import { EMPTY_ENTITY_MEMBERS } from 'config/constants';
 import { authorizedRequest, cleanRequest, toFilterUrl, toSortUrl } from 'helpers';
 import { useJukiNotification, useJukiUser, useRouterStore, useUIStore, useUserStore } from 'hooks';
 import { useState } from 'react';
@@ -64,7 +64,7 @@ const MERMAID_COLUMNS: DataViewerHeadersType<MermaidResponseDTO>[] = [
     sort: true,
   },
 ];
-console.log({ JUKI_SERVICE_V2_URL });
+
 const EMPTY_ENTITY_MEMBERS_DTO = () => {
   const members = EMPTY_ENTITY_MEMBERS();
   return {
